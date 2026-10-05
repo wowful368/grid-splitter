@@ -4,6 +4,7 @@ node_modules/
 
 # 构建产物
 build-exe/
+build/
 *.exe
 *.apk
 android/app/build/
