@@ -3,6 +3,10 @@
    切图助手 · 命令行版
    把图片按网格切分，支持等分 / 自定义比例 / 固定尺寸三种模式。
 
+   【本项目由 AI 生成】人类提供需求、反馈与验收。
+   功能设计参考在线工具 https://grid-splitter.tbpdt.top/ 的交互思路，
+   未使用其任何代码（该站为 React 打包产物，此处为原生 JS 实现）。
+
    用法示例：
      node slice.js 图片.jpg
      node slice.js 图片.jpg -r 2 -c 2

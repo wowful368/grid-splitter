@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 /* =========================================================================
    构建 Windows 单文件 EXE（基于 Node 24 内置 SEA）
+
+   【本项目由 AI 生成】人类提供需求、反馈与验收。
+
    流程：
      1. 把网页资源（index.html/app.js/fflate/slice.js）转成 base64 内嵌模块
      2. 与 desktop-launcher.js 合并成单一入口脚本
