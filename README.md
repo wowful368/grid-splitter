@@ -77,6 +77,58 @@ sliced. Custom-ratio mode is also left untouched so your specified ratios are pr
 | `Ctrl+V` | Paste an image from the clipboard |
 | Hold `Shift` while dragging | Temporarily lock to a square in Free mode; lock the original ratio when resizing an existing box |
 
+## Using it on a phone
+
+This tool works in mobile browsers — no app installation required.
+
+### Recommended: the online version
+
+If GitHub Pages is enabled for this repository, just open the URL in your phone's browser:
+
+```
+https://wowful368.github.io/grid-splitter/
+```
+
+That's it. No download, no unzipping, no risk of missing files. This is the easiest option and
+the recommended one.
+
+To enable it (one-time, ~2 minutes): go to **Settings → Pages**, set **Source** to
+`Deploy from a branch`, choose branch **`main`** and folder **`/ (root)`**, then save.
+
+### Alternative: offline use from the ZIP
+
+Download `grid-splitter-web.zip` from the Releases page and transfer it to your phone
+(send it to yourself via a messaging app, or use cloud storage).
+
+> [!WARNING]
+> **Do not transfer `index.html` on its own.** The web version needs all three of these files,
+> and the folder structure must be preserved, or you will get a blank page:
+>
+> ```
+> index.html
+> app.js
+> vendor/fflate.umd.js
+> ```
+
+Steps:
+
+1. Unzip the archive on your phone (your file manager, or an app like ZArchiver)
+2. Locate `index.html` in the extracted folder
+3. Long-press it → **Open with** → choose a browser (Chrome, Edge, Firefox, etc.)
+
+If you get a blank page, that is your browser restricting local file access — a security policy,
+not a broken file. Try a different browser, or use the online version above instead.
+
+### What to expect on a phone
+
+| Aspect | Notes |
+|---|---|
+| Selecting images, splitting, exporting ZIP | Works normally |
+| Square / ratio cropping | Works normally |
+| Dragging the crop box | Works with touch, but a finger is less precise than a mouse for small boxes |
+| Very large images | Phone memory is limited; images above roughly 8000 px may lag or fail |
+
+
 ## CLI version
 
 Requires Node.js 14 or later. Install dependencies first:
