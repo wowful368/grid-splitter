@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>切图助手 · 本地版</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2b3140;
+    --text:#e6e9ef; --muted:#98a1b3; --accent:#5b8cff; --accent2:#7c5cff;
+    --ok:#3ddc97; --warn:#ffb454; --danger:#ff6b6b;
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font:14px/1.6 "Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ---------- 顶栏 ---------- */
+  header{
+    display:flex; align-items:center; gap:14px;
+    padding:12px 20px; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#1b1f28,#15181f);
+    position:sticky; top:0; z-index:50;
+  }
+  header .logo{
+    width:30px;height:30px;border-radius:8px;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:grid;place-items:center;font-size:16px;
+  }
+  header h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.3px}
+  header .sub{color:var(--muted);font-size:12px}
+  header .spacer{flex:1}
+  .badge{
+    font-size:12px;color:var(--muted);border:1px solid var(--line);
+    padding:3px 10px;border-radius:999px;background:var(--panel)
+  }
+  /* ---------- 布局 ---------- */
+  .wrap{display:grid;grid-template-columns:1fr 340px;gap:16px;padding:16px;align-items:start}
+  @media (max-width:900px){ .wrap{grid-template-columns:1fr} }
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .card h2{
+    font-size:13px;margin:0;padding:11px 14px;font-weight:600;color:var(--muted);
+    border-bottom:1px solid var(--line);letter-spacing:.5px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .card h2 .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .card .body{padding:14px}
+
+  /* ---------- 工作区 ---------- */
+  #stage{
+    position:relative; min-height:300px; padding:14px;
+    display:grid;place-items:center;
+    background:
+      linear-gradient(45deg,#1a1e26 25%,transparent 25%,transparent 75%,#1a1e26 75%),
+      linear-gradient(45deg,#1a1e26 25%,#14171d 25%,#14171d 75%,#1a1e26 75%);
+    background-size:22px 22px; background-position:0 0,11px 11px;
+  }
+  /* 容器留一圈内边距：图片相应缩小，使裁剪框贴边时手柄仍有可抓取空间 */
+  #stageCanvas{position:relative;line-height:0;padding:14px;box-shadow:0 8px 40px rgba(0,0,0,.55)}
+  #stageCanvas img{display:block;max-width:100%;max-height:56vh;width:auto;height:auto;user-select:none;-webkit-user-drag:none}
+  /* overlay 的宽高与位置由 JS 按图片实际渲染矩形精确对齐（见 app.js syncCanvasSize） */
+  #overlay{position:absolute;pointer-events:auto;cursor:default}
+
+  /* 上传区 */
+  #dropzone{
+    width:min(520px,100%); padding:46px 24px; text-align:center; cursor:pointer;
+    border:2px dashed var(--line); border-radius:14px; background:var(--panel);
+    transition:.18s;
+  }
+  #dropzone:hover,#dropzone.over{border-color:var(--accent);background:#1a2030}
+  #dropzone .big{font-size:34px;margin-bottom:10px}
+  #dropzone .t{font-size:15px;font-weight:600;margin-bottom:6px}
+  #dropzone .d{font-size:12px;color:var(--muted)}
+
+  /* ---------- 表单控件 ---------- */
+  .row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .row label{flex:0 0 74px;color:var(--muted);font-size:12.5px}
+  input[type=number],input[type=text],select{
+    background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    border-radius:7px;padding:7px 9px;font-size:13px;font-family:inherit;width:100%;
+  }
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:3px;gap:3px}
+  .seg button{
+    flex:1;background:transparent;border:0;color:var(--muted);padding:7px 6px;
+    border-radius:6px;cursor:pointer;font-size:12.5px;font-family:inherit;transition:.15s;
+  }
+  .seg button:hover{color:var(--text)}
+  .seg button.on{background:var(--accent);color:#fff;font-weight:600}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    padding:9px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit;
+    transition:.15s;width:100%;
+  }
+  .btn:hover{border-color:var(--accent)}
+  .btn:disabled{opacity:.42;cursor:not-allowed}
+  .btn.primary{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border-color:transparent;color:#fff;font-weight:600;
+  }
+  .btn.primary:hover{filter:brightness(1.1)}
+  .btn.sm{width:auto;padding:6px 11px;font-size:12.5px}
+  .hint{font-size:12px;color:var(--muted);line-height:1.65}
+  .kbd{
+    background:var(--panel2);border:1px solid var(--line);border-bottom-width:2px;
+    border-radius:5px;padding:1px 6px;font-size:11.5px;color:var(--muted);
+  }
+  /* 开关 */
+  .switch{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}
+  .switch span{font-size:13px}
+  .switch small{display:block;color:var(--muted);font-size:11.5px;font-weight:400}
+  .sw{position:relative;width:42px;height:23px;flex:0 0 auto}
+  .sw input{opacity:0;width:0;height:0;position:absolute}
+  .sw i{
+    position:absolute;inset:0;background:var(--panel2);border:1px solid var(--line);
+    border-radius:999px;transition:.18s;cursor:pointer;
+  }
+  .sw i:before{
+    content:"";position:absolute;width:15px;height:15px;border-radius:50%;
+    background:var(--muted);top:3px;left:3px;transition:.18s;
+  }
+  .sw input:checked + i{background:var(--accent);border-color:var(--accent)}
+  .sw input:checked + i:before{transform:translateX(19px);background:#fff}
+  /* 列表 */
+  .list{max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
+  .list .it{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:7px 10px;font-size:12.5px;border-bottom:1px solid var(--line);
+  }
+  .list .it:last-child{border-bottom:0}
+  .list .it .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+  .list .it a{color:var(--accent);text-decoration:none;flex:0 0 auto}
+  .list .it a:hover{text-decoration:underline}
+  .divider{height:1px;background:var(--line);margin:14px 0}
+  .meta{font-size:12px;color:var(--muted);line-height:1.9}
+  .meta b{color:var(--text);font-weight:600}
+  .err{color:var(--danger);font-size:12.5px}
+  .ok{color:var(--ok);font-size:12.5px}
+  #resultPanel{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">✂</div>
+  <div>
+    <h1>切图助手 · 本地版</h1>
+    <div class="sub">纯离线运行，图片不会离开本机</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="badge" id="statusBadge">等待上传</div>
+</header>
+
+<div class="wrap">
+  <!-- ================= 左：工作区 ================= -->
+  <div class="card">
+    <h2><span class="dot"></span>画布</h2>
+    <div id="stage">
+      <div id="dropzone">
+        <div class="big">🖼️</div>
+        <div class="t">点击或拖拽图片到此处</div>
+        <div class="d">支持 JPG / PNG / WebP，可一次拖入多张</div>
+      </div>
+      <div id="stageCanvas" style="display:none">
+        <img id="baseImg" alt="待切图片">
+        <canvas id="overlay"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 右：控制面板 ================= -->
+  <div>
+    <!-- 参数 -->
+    <div class="card" style="margin-bottom:16px" id="panelParams">
+      <h2><span class="dot"></span>切分参数</h2>
+      <div class="body">
+        <div class="row">
+          <label>模式</label>
+          <div class="seg" id="modeSeg">
+            <button data-mode="even" class="on">等分</button>
+            <button data-mode="size">按尺寸</button>
+            <button data-mode="custom">自定义</button>
+          </div>
+        </div>
+
+        <!-- 等分 -->
+        <div id="paneEven">
+          <div class="row"><label>列数</label><input type="number" id="cols" value="4" min="1" max="100"></div>
+          <div class="row"><label>行数</label><input type="number" id="rows" value="4" min="1" max="100"></div>
+          <div class="row" style="gap:6px;flex-wrap:wrap">
+            <button class="btn sm" data-preset="2,2">2×2</button>
+            <button class="btn sm" data-preset="3,3">3×3</button>
+            <button class="btn sm" data-preset="4,4">4×4</button>
+            <button class="btn sm" data-preset="3,1">竖切 3</button>
+            <button class="btn sm" data-preset="1,3">横切 3</button>
+          </div>
+        </div>
+
+        <!-- 按尺寸 -->
+        <div id="paneSize" style="display:none">
+          <div class="row"><label>块宽 px</label><input type="number" id="tileW" value="1080" min="1"></div>
+          <div class="row"><label>块高 px</label><input type="number" id="tileH" value="1080" min="1"></div>
+          <div class="hint">按固定像素尺寸切分，右侧余料可单独输出。</div>
+        </div>
+
+        <!-- 自定义 -->
+        <div id="paneCustom" style="display:none">
+          <div class="row"><label>列宽比</label><input type="text" id="colRatio" value="1,1,1"></div>
+          <div class="row"><label>行高比</label><input type="text" id="rowRatio" value="1,1,1"></div>
+          <div class="hint">用英文逗号分隔，如 <span class="kbd">1,2,1</span> 表示中间一列占两份。</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="switch">
+          <span>裁剪区域<small>拖动选框，只切选中的部分</small></span>
+          <label class="sw"><input type="checkbox" id="useCrop"><i></i></label>
+        </div>
+
+        <!-- 裁剪形状：自定义 / 正方形 / 矩形 -->
+        <div id="shapeBox" style="display:none">
+          <div class="row" style="margin-bottom:8px">
+            <label>裁剪形状</label>
+            <div class="seg" id="shapeSeg">
+              <button data-shape="free" class="on">自定义</button>
+              <button data-shape="square">正方形</button>
+              <button data-shape="ratio">矩形</button>
+            </div>
+          </div>
+          <div class="row" id="ratioRow" style="display:none">
+            <label>宽高比</label>
+            <input type="text" id="ratioInput" value="4:3" placeholder="如 4:3 或 16:9">
+          </div>
+          <div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px" id="ratioPresets" hidden>
+            <button class="btn sm" data-ratio="1:1">1:1</button>
+            <button class="btn sm" data-ratio="4:3">4:3</button>
+            <button class="btn sm" data-ratio="3:4">3:4</button>
+            <button class="btn sm" data-ratio="16:9">16:9</button>
+            <button class="btn sm" data-ratio="9:16">9:16</button>
+          </div>
+        </div>
+
+        <div class="switch">
+          <span>无损 PNG 输出<small>关闭则输出 JPEG（体积更小）</small></span>
+          <label class="sw"><input type="checkbox" id="lossless"><i></i></label>
+        </div>
+        <div class="switch">
+          <span>切块完全等分<small>自动微调裁剪尺寸，使每块像素完全相同</small></span>
+          <label class="sw"><input type="checkbox" id="autoAlign" checked><i></i></label>
+        </div>
+
+        <div class="switch">
+          <span>输出余料<small>按尺寸模式下，切不完的边缘</small></span>
+          <label class="sw"><input type="checkbox" id="keepRemainder"><i></i></label>
+        </div>
+
+        <div class="row" id="rowQuality">
+          <label>JPEG 质量</label>
+          <input type="range" id="quality" min="50" max="100" value="92">
+          <span id="qualityVal" class="meta" style="flex:0 0 32px;text-align:right">92</span>
+        </div>
+
+        <div class="divider"></div>
+        <div class="meta" id="previewMeta">尚未载入图片</div>
+      </div>
+    </div>
+
+    <!-- 操作 -->
+    <div class="card" style="margin-bottom:16px">
+      <h2><span class="dot"></span>操作</h2>
+      <div class="body">
+        <button class="btn primary" id="btnExport" disabled>📦 切分并导出 ZIP</button>
+        <div style="height:8px"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="btnReset" disabled>重置裁剪</button>
+          <button class="btn" id="btnClear" disabled>清除图片</button>
+        </div>
+        <div style="height:10px"></div>
+        <div class="hint" id="hintText">
+          载入图片后可直接导出。勾选「裁剪区域」后，<b>拖动选框</b>定位、<b>拖动手柄</b>缩放；按住
+          <span class="kbd">Shift</span> 可锁定比例。
+        </div>
+      </div>
+    </div>
+
+    <!-- 结果 -->
+    <div class="card" id="resultPanel">
+      <h2><span class="dot"></span>导出结果</h2>
+      <div class="body">
+        <div id="resultMsg" class="ok"></div>
+        <div style="height:8px"></div>
+        <div class="list" id="resultList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 多图选择条 -->
+<div class="card" id="multiPanel" style="display:none;margin:0 16px 16px">
+  <h2><span class="dot"></span>待处理图片</h2>
+  <div class="list" id="multiList" style="margin:14px;max-height:150px"></div>
+</div>
+
+<!-- fflate：ZIP 打包（本地内置，无需联网） -->
+<script src="vendor/fflate.umd.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

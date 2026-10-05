@@ -1,0 +1,25 @@
+{
+  "name": "grid-splitter",
+  "version": "1.0.0",
+  "description": "图片网格切分工具：网页版 + 命令行版，支持裁剪、正方形/比例裁剪、无损输出",
+  "main": "slice.js",
+  "bin": {
+    "slice": "./slice.js"
+  },
+  "scripts": {
+    "slice": "node slice.js",
+    "build:exe": "node build-exe.js"
+  },
+  "keywords": [
+    "image",
+    "split",
+    "grid",
+    "crop",
+    "九宫格",
+    "切图"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "sharp": "^0.35.5"
+  }
+}
